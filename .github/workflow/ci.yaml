@@ -1,0 +1,46 @@
+name: Build and Test
+on: [push, pull_request]
+jobs:
+  biscuit-capi:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout biscuit-auth/biscuit-rust
+      uses: actions/checkout@v4 
+      with:
+        repository: 'biscuit-auth/biscuit-rust'
+        ref: '4.1.0'
+        path: 'biscuit-auth'
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+    - name: Setup Cargo-C
+      run: cargo install cargo-c
+    - name: Build Biscuit
+      run: |
+        cd biscuit-auth
+        cargo cbuild --destdir=/usr/local --prefix=/ 
+
+  php-build:
+    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: ['ubuntu-latest']
+        php-versions: ['8.1', '8.2', '8.3']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          ini-values: error_reporting=-1, display_errors=On
+          coverage: none
+      - name: phpize
+        run: phpize
+      - name: configure
+        run: configure --with-biscuit
+      - name: make
+        run: make
+      - name: test
+        run: env NO_INTERACTION=1 make test

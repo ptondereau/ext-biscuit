@@ -1,0 +1,14 @@
+// $Id$
+// vim:ft=javascript
+
+ARG_WITH("biscuit", "for biscuit support", "no");
+
+if (PHP_BISCUIT != "no") {
+    if (CHECK_LIB("libbiscuit_auth.lib", "biscuit", PHP_BISCUIT) && CHECK_HEADER_ADD_INCLUDE("biscuit_auth.h", "CFLAGS_BISCUIT")) {
+        EXTENSION("biscuit", "biscuit.c");
+        AC_DEFINE('HAVE_BISCUITLIB', 1 , 'Have the Biscuit library');
+        PHP_INSTALL_HEADERS("ext/biscuit/", "php_biscuit.h");
+    } else {
+        WARNING("biscuit not enabled; libraries and headers not found");
+    }
+}
