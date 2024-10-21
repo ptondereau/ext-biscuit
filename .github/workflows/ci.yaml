@@ -4,28 +4,29 @@ jobs:
   biscuit-capi:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout biscuit-auth/biscuit-rust
-      uses: actions/checkout@v4 
-      with:
-        repository: 'biscuit-auth/biscuit-rust'
-        ref: '4.1.0'
-        path: 'biscuit-auth'
-    - name: Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-    - name: Setup Cargo-C
-      run: cargo install cargo-c
-    - name: Build Biscuit
-      run: |
-        cd biscuit-auth
-        cargo cbuild --destdir=/usr/local --prefix=/ 
+      - name: Checkout biscuit-auth/biscuit-rust
+        uses: actions/checkout@v4
+        with:
+          repository: "biscuit-auth/biscuit-rust"
+          ref: "4.1.0"
+          path: "biscuit-auth"
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Setup Cargo-C
+        run: cargo install cargo-c
+      - name: Build Biscuit
+        run: |
+          cd biscuit-auth
+          cargo cbuild --destdir=/usr/local --prefix=/ --release --features="capi"
 
   php-build:
     name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
     runs-on: ${{ matrix.operating-system }}
+    needs: [biscuit-capi]
     strategy:
       matrix:
-        operating-system: ['ubuntu-latest']
-        php-versions: ['8.1', '8.2', '8.3']
+        operating-system: ["ubuntu-latest"]
+        php-versions: ["8.1", "8.2", "8.3"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
