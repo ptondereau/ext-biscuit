@@ -8,7 +8,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "biscuit-auth/biscuit-rust"
-          ref: "4.1.0"
           path: "biscuit-auth"
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
