@@ -36,3 +36,6 @@ tests/*/*.log
 tests/*/*.sh
 .vscode
 lib
+.idea
+*.dep
+config.h.in~

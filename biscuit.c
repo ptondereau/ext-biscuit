@@ -1,86 +1,320 @@
 /* ext_biscuit extension for PHP */
 
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+#include "config.h"
 #endif
 
 #include "php.h"
 #include "ext/standard/info.h"
-#include "php_biscuit.h"
+#include "zend_exceptions.h"
+#include "include/biscuit_auth.h"
+
 #include "biscuit_arginfo.h"
+#include "php_biscuit.h"
 
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
-#define ZEND_PARSE_PARAMETERS_NONE() \
-	ZEND_PARSE_PARAMETERS_START(0, 0) \
-	ZEND_PARSE_PARAMETERS_END()
+#define ZEND_PARSE_PARAMETERS_NONE()  \
+    ZEND_PARSE_PARAMETERS_START(0, 0) \
+    ZEND_PARSE_PARAMETERS_END()
 #endif
 
-/* {{{ void test1() */
-PHP_FUNCTION(test1)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
+/* Initialize object handlers */
+zend_object_handlers biscuit_keypair_object_handlers;
+zend_object_handlers biscuit_publickey_object_handlers;
+zend_object_handlers biscuit_token_object_handlers;
+zend_object_handlers biscuit_builder_object_handlers;
+zend_object_handlers biscuit_block_builder_object_handlers;
+zend_object_handlers biscuit_authorizer_object_handlers;
+zend_object_handlers biscuit_authorizer_builder_object_handlers;
 
-	php_printf("The extension %s is loaded and working!\r\n", "ext_biscuit");
+/* Initialize class entries */
+zend_class_entry *ce_BiscuitKeyPair;
+zend_class_entry *ce_BiscuitPublicKey;
+zend_class_entry *ce_BiscuitToken;
+zend_class_entry *ce_BiscuitBuilder;
+zend_class_entry *ce_BiscuitBlockBuilder;
+zend_class_entry *ce_BiscuitAuthorizer;
+zend_class_entry *ce_BiscuitAuthorizerBuilder;
+zend_class_entry *ce_BiscuitException;
+
+/* Object creation/free functions */
+zend_object *php_biscuit_keypair_create_object(zend_class_entry *ce) {
+    biscuit_keypair_object *intern;
+    intern = zend_object_alloc(sizeof(biscuit_keypair_object), ce);
+    zend_object_std_init(&intern->std, ce);
+    object_properties_init(&intern->std, ce);
+    intern->std.handlers = &biscuit_keypair_object_handlers;
+
+    return &intern->std;
 }
+
+void php_biscuit_keypair_free_obj(zend_object *obj) {
+    biscuit_keypair_object *intern = php_biscuit_keypair_from_obj(obj);
+    if (intern->keypair) {
+        key_pair_free(intern->keypair);
+        intern->keypair = NULL;
+    }
+    zend_object_std_dtor(obj);
+}
+
+zend_object *php_biscuit_publickey_create_object(zend_class_entry *ce) {
+    biscuit_publickey_object *intern;
+    intern = zend_object_alloc(sizeof(biscuit_publickey_object), ce);
+    zend_object_std_init(&intern->std, ce);
+    object_properties_init(&intern->std, ce);
+    intern->std.handlers = &biscuit_publickey_object_handlers;
+
+    return &intern->std;
+}
+
+void php_biscuit_publickey_free_obj(zend_object *obj) {
+    biscuit_publickey_object *intern = php_biscuit_publickey_from_obj(obj);
+    if (intern->publickey) {
+        public_key_free(intern->publickey);
+        intern->publickey = NULL;
+    }
+    zend_object_std_dtor(obj);
+}
+
+zend_object *php_biscuit_token_create_object(zend_class_entry *ce) {
+    biscuit_token_object *intern;
+    intern = zend_object_alloc(sizeof(biscuit_token_object), ce);
+    zend_object_std_init(&intern->std, ce);
+    object_properties_init(&intern->std, ce);
+    intern->std.handlers = &biscuit_token_object_handlers;
+
+    return &intern->std;
+}
+
+void php_biscuit_token_free_obj(zend_object *obj) {
+    biscuit_token_object *intern = php_biscuit_token_from_obj(obj);
+    if (intern->token) {
+        biscuit_free(intern->token);
+        intern->token = NULL;
+    }
+    zend_object_std_dtor(obj);
+}
+
+zend_object *php_biscuit_builder_create_object(zend_class_entry *ce) {
+    biscuit_builder_object *intern;
+    intern = zend_object_alloc(sizeof(biscuit_builder_object), ce);
+    zend_object_std_init(&intern->std, ce);
+    object_properties_init(&intern->std, ce);
+    intern->std.handlers = &biscuit_builder_object_handlers;
+
+    return &intern->std;
+}
+
+void php_biscuit_builder_free_obj(zend_object *obj) {
+    biscuit_builder_object *intern = php_biscuit_builder_from_obj(obj);
+    if (intern->builder) {
+        biscuit_builder_free(intern->builder);
+        intern->builder = NULL;
+    }
+    zend_object_std_dtor(obj);
+}
+
+zend_object *php_biscuit_block_builder_create_object(zend_class_entry *ce) {
+    biscuit_block_builder_object *intern;
+    intern = zend_object_alloc(sizeof(biscuit_block_builder_object), ce);
+    zend_object_std_init(&intern->std, ce);
+    object_properties_init(&intern->std, ce);
+    intern->std.handlers = &biscuit_block_builder_object_handlers;
+
+    return &intern->std;
+}
+
+void php_biscuit_block_builder_free_obj(zend_object *obj) {
+    biscuit_block_builder_object *intern = php_biscuit_block_builder_from_obj(obj);
+    if (intern->block_builder) {
+        block_builder_free(intern->block_builder);
+        intern->block_builder = NULL;
+    }
+    zend_object_std_dtor(obj);
+}
+
+zend_object *php_biscuit_authorizer_create_object(zend_class_entry *ce) {
+    biscuit_authorizer_object *intern;
+    intern = zend_object_alloc(sizeof(biscuit_authorizer_object), ce);
+    zend_object_std_init(&intern->std, ce);
+    object_properties_init(&intern->std, ce);
+    intern->std.handlers = &biscuit_authorizer_object_handlers;
+
+    return &intern->std;
+}
+
+void php_biscuit_authorizer_free_obj(zend_object *obj) {
+    biscuit_authorizer_object *intern = php_biscuit_authorizer_from_obj(obj);
+    if (intern->authorizer) {
+        authorizer_free(intern->authorizer);
+        intern->authorizer = NULL;
+    }
+    zend_object_std_dtor(obj);
+}
+
+zend_object *php_biscuit_authorizer_builder_create_object(zend_class_entry *ce) {
+    biscuit_authorizer_builder_object *intern;
+    intern = zend_object_alloc(sizeof(biscuit_authorizer_builder_object), ce);
+    zend_object_std_init(&intern->std, ce);
+    object_properties_init(&intern->std, ce);
+    intern->std.handlers = &biscuit_authorizer_builder_object_handlers;
+
+    return &intern->std;
+}
+
+void php_biscuit_authorizer_builder_free_obj(zend_object *obj) {
+    biscuit_authorizer_builder_object *intern = php_biscuit_authorizer_builder_from_obj(obj);
+    if (intern->authorizer_builder) {
+        authorizer_builder_free(intern->authorizer_builder);
+        intern->authorizer_builder = NULL;
+    }
+    zend_object_std_dtor(obj);
+}
+
+/* Error handling functions */
+PHP_FUNCTION(biscuit_error_message) {
+    ZEND_PARSE_PARAMETERS_NONE();
+    const char *message = error_message();
+    RETURN_STRING(message);
+}
+
+PHP_FUNCTION(biscuit_error_kind) {
+    ZEND_PARSE_PARAMETERS_NONE();
+    enum ErrorKind kind = error_kind();
+    RETURN_LONG(kind);
+}
+
+PHP_FUNCTION(biscuit_error_check_count) {
+    ZEND_PARSE_PARAMETERS_NONE();
+    uint64_t count = error_check_count();
+    RETURN_LONG(count);
+}
+
+PHP_FUNCTION(biscuit_error_check_id) {
+    zend_long check_index;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_LONG(check_index)
+    ZEND_PARSE_PARAMETERS_END();
+
+    uint64_t id = error_check_id(check_index);
+    RETURN_LONG(id);
+}
+
+PHP_FUNCTION(biscuit_error_check_block_id) {
+    zend_long check_index;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_LONG(check_index)
+    ZEND_PARSE_PARAMETERS_END();
+
+    uint64_t block_id = error_check_block_id(check_index);
+    RETURN_LONG(block_id);
+}
+
+PHP_FUNCTION(biscuit_error_check_rule) {
+    zend_long check_index;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_LONG(check_index)
+    ZEND_PARSE_PARAMETERS_END();
+
+    const char *rule = error_check_rule(check_index);
+    RETURN_STRING(rule);
+}
+
+PHP_FUNCTION(biscuit_error_check_is_authorizer) {
+    zend_long check_index;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_LONG(check_index)
+    ZEND_PARSE_PARAMETERS_END();
+
+    bool is_authorizer = error_check_is_authorizer(check_index);
+    RETURN_BOOL(is_authorizer);
+}
+
+/* Module initialization */
+PHP_MINIT_FUNCTION(biscuit) {
+    zend_class_entry ce;
+
+    /* Initialize object handlers */
+    memcpy(&biscuit_keypair_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    biscuit_keypair_object_handlers.offset = XtOffsetOf(biscuit_keypair_object, std);
+    biscuit_keypair_object_handlers.free_obj = php_biscuit_keypair_free_obj;
+
+    /* Register BiscuitException class */
+    INIT_CLASS_ENTRY(ce, "BiscuitException", NULL);
+    ce_BiscuitException = zend_register_internal_class_ex(&ce, zend_ce_exception);
+
+    /* Register BiscuitKeyPair class */
+    INIT_CLASS_ENTRY(ce, "BiscuitKeyPair", class_BiscuitKeyPair_methods);
+    ce_BiscuitKeyPair = zend_register_internal_class(&ce);
+    ce_BiscuitKeyPair->create_object = php_biscuit_keypair_create_object;
+
+    /* Register BiscuitPublicKey class */
+    INIT_CLASS_ENTRY(ce, "BiscuitPublicKey", class_BiscuitPublicKey_methods);
+    ce_BiscuitPublicKey = zend_register_internal_class(&ce);
+    ce_BiscuitPublicKey->create_object = php_biscuit_publickey_create_object;
+
+    /* Register BiscuitToken class */
+    INIT_CLASS_ENTRY(ce, "BiscuitToken", class_BiscuitToken_methods);
+    ce_BiscuitToken = zend_register_internal_class(&ce);
+    ce_BiscuitToken->create_object = php_biscuit_token_create_object;
+
+    /* Register BiscuitBuilder class */
+    INIT_CLASS_ENTRY(ce, "BiscuitBuilder", class_BiscuitBuilder_methods);
+    ce_BiscuitBuilder = zend_register_internal_class(&ce);
+    ce_BiscuitBuilder->create_object = php_biscuit_builder_create_object;
+
+    /* Register BiscuitBlockBuilder class */
+    INIT_CLASS_ENTRY(ce, "BiscuitBlockBuilder", class_BiscuitBlockBuilder_methods);
+    ce_BiscuitBlockBuilder = zend_register_internal_class(&ce);
+    ce_BiscuitBlockBuilder->create_object = php_biscuit_block_builder_create_object;
+
+    /* Register BiscuitAuthorizer class */
+    INIT_CLASS_ENTRY(ce, "BiscuitAuthorizer", class_BiscuitAuthorizer_methods);
+    ce_BiscuitAuthorizer = zend_register_internal_class(&ce);
+    ce_BiscuitAuthorizer->create_object = php_biscuit_authorizer_create_object;
+
+    /* Register BiscuitAuthorizerBuilder class */
+    INIT_CLASS_ENTRY(ce, "BiscuitAuthorizerBuilder", class_BiscuitAuthorizerBuilder_methods);
+    ce_BiscuitAuthorizerBuilder = zend_register_internal_class(&ce);
+
+    /* Register error constants */
+    REGISTER_LONG_CONSTANT("BISCUIT_ERROR_NONE", None, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BISCUIT_ERROR_INVALID_ARGUMENT", InvalidArgument, CONST_CS | CONST_PERSISTENT);
+    // ... Register other error constants ...
+
+    /* Register algorithm constants */
+    REGISTER_LONG_CONSTANT("BISCUIT_ALGORITHM_ED25519", Ed25519, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BISCUIT_ALGORITHM_SECP256R1", Secp256r1, CONST_CS | CONST_PERSISTENT);
+
+    return SUCCESS;
+}
+
+/* Module shutdown */
+PHP_MSHUTDOWN_FUNCTION(biscuit) { return SUCCESS; }
+
+/* Module info */
+PHP_MINFO_FUNCTION(biscuit) {
+    php_info_print_table_start();
+    php_info_print_table_header(2, "biscuit support", "enabled");
+    php_info_print_table_row(2, "Version", PHP_BISCUIT_VERSION);
+    php_info_print_table_end();
+}
+
+/* {{{ biscuit_module_entry
+ */
+zend_module_entry biscuit_module_entry = {
+    STANDARD_MODULE_HEADER,    "biscuit", NULL, PHP_MINIT(biscuit), PHP_MSHUTDOWN(biscuit), NULL, NULL, PHP_MINFO(biscuit), PHP_BISCUIT_VERSION,
+    STANDARD_MODULE_PROPERTIES};
 /* }}} */
 
-/* {{{ string test2( [ string $var ] ) */
-PHP_FUNCTION(test2)
-{
-	char *var = "World";
-	size_t var_len = sizeof("World") - 1;
-	zend_string *retval;
-
-	ZEND_PARSE_PARAMETERS_START(0, 1)
-		Z_PARAM_OPTIONAL
-		Z_PARAM_STRING(var, var_len)
-	ZEND_PARSE_PARAMETERS_END();
-
-	retval = strpprintf(0, "Hello %s", var);
-
-	RETURN_STR(retval);
-}
-/* }}}*/
-
-/* {{{ PHP_RINIT_FUNCTION */
-PHP_RINIT_FUNCTION(ext_biscuit)
-{
-#if defined(ZTS) && defined(COMPILE_DL_EXT_BISCUIT)
-	ZEND_TSRMLS_CACHE_UPDATE();
-#endif
-
-	return SUCCESS;
-}
-/* }}} */
-
-/* {{{ PHP_MINFO_FUNCTION */
-PHP_MINFO_FUNCTION(biscuit)
-{
-	php_info_print_table_start();
-	php_info_print_table_header(2, "biscuit support", "enabled");
-	php_info_print_table_end();
-}
-/* }}} */
-
-/* {{{ ext_biscuit_module_entry */
-zend_module_entry ext_biscuit_module_entry = {
-	STANDARD_MODULE_HEADER,
-	"biscuit",					    /* Extension name */
-	ext_functions,					/* zend_function_entry */
-	NULL,							/* PHP_MINIT - Module initialization */
-	NULL,							/* PHP_MSHUTDOWN - Module shutdown */
-	PHP_RINIT(biscuit),			/* PHP_RINIT - Request initialization */
-	NULL,							/* PHP_RSHUTDOWN - Request shutdown */
-	PHP_MINFO(biscuit),			/* PHP_MINFO - Module info */
-	PHP_BISCUIT_VERSION,		/* Version */
-	STANDARD_MODULE_PROPERTIES
-};
-/* }}} */
-
-#ifdef COMPILE_DL_EXT_BISCUIT
-# ifdef ZTS
+#ifdef COMPILE_DL_BISCUIT
+#ifdef ZTS
 ZEND_TSRMLS_CACHE_DEFINE()
-# endif
+#endif
 ZEND_GET_MODULE(biscuit)
 #endif
