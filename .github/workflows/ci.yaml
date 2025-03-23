@@ -2,7 +2,7 @@ name: Build and Test
 on: [push, pull_request]
 jobs:
   php-build:
-    name: PHP ${{ matrix.php-versions }} on ${{ matrix.os }} (${{ matrix.arch }}) with Biscuit ${{ matrix.biscuit-version }}
+    name: PHP ${{ matrix.php-versions }} on ${{ matrix.os }} (${{ matrix.arch }}) with Biscuit ${{ matrix.biscuit-versions }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
