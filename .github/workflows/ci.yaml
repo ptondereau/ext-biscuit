@@ -47,8 +47,8 @@ jobs:
       - name: Install Biscuit library (macOS)
         if: matrix.os == 'macos-latest'
         run: |
-          sudo cp -r biscuit-lib/usr/lib/* /usr/lib/
-          sudo cp -r biscuit-lib/usr/include/* /usr/include/    
+          sudo cp -r biscuit-lib/usr/lib/* /usr/local/lib/
+          sudo cp -r biscuit-lib/usr/include/* /usr/local/include/    
 
       - name: Checkout
         uses: actions/checkout@v4
