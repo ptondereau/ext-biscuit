@@ -3,7 +3,7 @@
 #endif
 #include "php.h"
 #include "zend_exceptions.h"
-#include "biscuit_auth.h"
+#include "biscuit_capi/biscuit_auth.h"
 #include "php_biscuit.h"
 
 /* Constants */

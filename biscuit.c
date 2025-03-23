@@ -7,7 +7,7 @@
 #include "php.h"
 #include "ext/standard/info.h"
 #include "zend_exceptions.h"
-#include "biscuit_auth.h"
+#include "biscuit_capi/biscuit_auth.h"
 
 #include "biscuit_arginfo.h"
 #include "php_biscuit.h"
