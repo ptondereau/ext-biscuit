@@ -5,6 +5,7 @@ jobs:
     name: PHP ${{ matrix.php-versions }} on ${{ matrix.os }} (${{ matrix.arch }}) with Biscuit ${{ matrix.biscuit-version }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
         php-versions: ["8.1", "8.2", "8.3", "8.4"]
