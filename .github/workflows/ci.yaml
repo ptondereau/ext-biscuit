@@ -25,7 +25,7 @@ jobs:
     strategy:
       matrix:
         operating-system: ["ubuntu-latest"]
-        php-versions: ["8.1", "8.2", "8.3"]
+        php-versions: ["8.1", "8.2", "8.3", "8.4"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,10 +36,12 @@ jobs:
           php-version: ${{ matrix.php-versions }}
           ini-values: error_reporting=-1, display_errors=On
           coverage: none
+        env:
+          debug: true
       - name: phpize
         run: phpize
       - name: configure
-        run: configure --with-biscuit
+        run: ./configure --with-biscuit
       - name: make
         run: make
       - name: test
