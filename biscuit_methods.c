@@ -1,10 +1,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include "include/biscuit_auth.h"
 #include "php.h"
-#include "php_biscuit.h"
 #include "zend_exceptions.h"
+#include "biscuit_auth.h"
+#include "php_biscuit.h"
 
 /* Constants */
 #define BISCUIT_KEY_SIZE 32
