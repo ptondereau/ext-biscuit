@@ -2,25 +2,31 @@ name: Build and Test
 on: [push, pull_request]
 jobs:
   php-build:
-    name: PHP ${{ matrix.php-version }} on ${{ matrix.os }} (${{ matrix.arch }}) with Biscuit ${{ matrix.biscuit-version }}
+    name: PHP ${{ matrix.php-versions }} on ${{ matrix.os }} (${{ matrix.arch }}) with Biscuit ${{ matrix.biscuit-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
         php-versions: ["8.1", "8.2", "8.3", "8.4"]
-        arch: ["x86_x64", "arm64"]
         biscuit-versions: ["6.0.0-beta.2"]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x86_x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+          - os: macos-latest
+            platform: macos
+            arch: arm64
+          - os: macos-latest
+            platform: macos
+            arch: x86_x64
     steps:
       - name: Set asset name based on OS and architecture
         id: set-asset-name
         run: |
-          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            echo "OS_NAME=linux" >> $GITHUB_ENV
-          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            echo "OS_NAME=macos" >> $GITHUB_ENV
-          fi
-
-          echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-versions }}-${{ matrix.arch }}-${{ env.OS_NAME }}.tar.gz" >> $GITHUB_ENV
+          echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-versions }}-${{ matrix.arch }}-${{ matrix.platform }}.tar.gz" >> $GITHUB_ENV
 
       - name: Download Biscuit library
         run: |
