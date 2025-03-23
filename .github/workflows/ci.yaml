@@ -12,7 +12,7 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: linux
-            arch: x86_x64
+            arch: x86_64
           # - os: ubuntu-latest
           #   platform: linux
           #   arch: arm64
@@ -21,7 +21,7 @@ jobs:
             arch: arm64
           - os: macos-latest
             platform: macos
-            arch: x86_x64
+            arch: x86_64
     steps:
       - name: Set asset name based on OS and architecture
         id: set-asset-name
