@@ -53,7 +53,8 @@ jobs:
           sudo chmod 755 /usr/local/lib
           sudo chmod 755 /usr/local/include
           sudo cp -r biscuit-lib/usr/lib/* /usr/local/lib/
-          sudo cp -r biscuit-lib/usr/include/* /usr/local/include/    
+          sudo cp -r biscuit-lib/usr/include/* /usr/local/include/
+          sudo ldconfig
 
       - name: Checkout
         uses: actions/checkout@v4
