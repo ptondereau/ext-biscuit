@@ -15,12 +15,11 @@ jobs:
         id: set-asset-name
         run: |
           if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            OS_NAME="linux"
+            echo "OS_NAME=linux" >> $GITHUB_ENV
           elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            OS_NAME="macos"
+            echo "OS_NAME=macos" >> $GITHUB_ENV
           fi
-          
-          echo "OS_NAME=${OS_NAME}" >> $GITHUB_ENV
+
           echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-versions }}-${{ matrix.arch }}-${{ env.OS_NAME }}.tar.gz" >> $GITHUB_ENV
 
       - name: Download Biscuit library
