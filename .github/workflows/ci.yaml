@@ -47,6 +47,10 @@ jobs:
       - name: Install Biscuit library (macOS)
         if: matrix.os == 'macos-latest'
         run: |
+          sudo mkdir -p /usr/local/lib
+          sudo mkdir -p /usr/local/include
+          sudo chmod 755 /usr/local/lib
+          sudo chmod 755 /usr/local/include
           sudo cp -r biscuit-lib/usr/lib/* /usr/local/lib/
           sudo cp -r biscuit-lib/usr/include/* /usr/local/include/    
 
