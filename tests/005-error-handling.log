@@ -1,0 +1,19 @@
+
+---- EXPECTED OUTPUT
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+---- ACTUAL OUTPUT
+Segmentation fault (core dumped)
+
+Termsig=11
+---- FAILED

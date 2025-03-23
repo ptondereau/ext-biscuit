@@ -1,12 +1,3 @@
---TEST--
-Basic Biscuit extension test
---SKIPIF--
-<?php
-if (!extension_loaded('biscuit')) {
-    echo 'skip';
-}
-?>
---FILE--
 <?php
 // Test KeyPair creation with no parameters - should throw exception
 try {
@@ -39,13 +30,3 @@ $deserialized = BiscuitKeyPair::deserialize($serialized);
 var_dump($deserialized instanceof BiscuitKeyPair);
 
 ?>
---EXPECT--
-bool(true)
-string(16) "invalid argument"
-int(1)
-int(0)
-bool(true)
-bool(true)
-bool(true)
-bool(true)
-bool(true)

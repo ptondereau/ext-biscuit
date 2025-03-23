@@ -373,3 +373,318 @@ PHP_METHOD(BiscuitAuthorizer, print) {
         RETURN_EMPTY_STRING();
     }
 }
+
+/* ========================= BiscuitBlockBuilder methods ========================= */
+PHP_METHOD(BiscuitBlockBuilder, __construct) {
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    biscuit_block_builder_object *intern = Z_BISCUIT_BLOCK_BUILDER_P(ZEND_THIS);
+    intern->block_builder = create_block();
+
+    if (!intern->block_builder) {
+        throw_biscuit_exception("Failed to create block builder");
+        RETURN_THROWS();
+    }
+}
+
+PHP_METHOD(BiscuitBlockBuilder, setContext) {
+    char *context;
+    size_t context_len;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_STRING(context, context_len)
+    ZEND_PARSE_PARAMETERS_END();
+
+    biscuit_block_builder_object *intern = Z_BISCUIT_BLOCK_BUILDER_P(ZEND_THIS);
+
+    bool result = block_builder_set_context(intern->block_builder, context);
+    if (result) {
+        RETURN_ZVAL(getThis(), 1, 0);
+    }
+    RETURN_BOOL(false);
+}
+
+PHP_METHOD(BiscuitBlockBuilder, addFact) {
+    char *fact;
+    size_t fact_len;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_STRING(fact, fact_len)
+    ZEND_PARSE_PARAMETERS_END();
+
+    biscuit_block_builder_object *intern = Z_BISCUIT_BLOCK_BUILDER_P(ZEND_THIS);
+
+    bool result = block_builder_add_fact(intern->block_builder, fact);
+    if (result) {
+        RETURN_ZVAL(getThis(), 1, 0);
+    }
+    RETURN_BOOL(false);
+}
+
+PHP_METHOD(BiscuitBlockBuilder, addRule) {
+    char *rule;
+    size_t rule_len;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_STRING(rule, rule_len)
+    ZEND_PARSE_PARAMETERS_END();
+
+    biscuit_block_builder_object *intern = Z_BISCUIT_BLOCK_BUILDER_P(ZEND_THIS);
+
+    bool result = block_builder_add_rule(intern->block_builder, rule);
+    if (result) {
+        RETURN_ZVAL(getThis(), 1, 0);
+    }
+    RETURN_BOOL(false);
+}
+
+PHP_METHOD(BiscuitBlockBuilder, addCheck) {
+    char *check;
+    size_t check_len;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_STRING(check, check_len)
+    ZEND_PARSE_PARAMETERS_END();
+
+    biscuit_block_builder_object *intern = Z_BISCUIT_BLOCK_BUILDER_P(ZEND_THIS);
+
+    bool result = block_builder_add_check(intern->block_builder, check);
+    if (result) {
+        RETURN_ZVAL(getThis(), 1, 0);
+    }
+    RETURN_BOOL(false);
+}
+
+PHP_METHOD(BiscuitToken, fromSealed) {
+    char *data;
+    size_t data_len;
+    zval *root;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    Z_PARAM_STRING(data, data_len)
+    Z_PARAM_OBJECT_OF_CLASS(root, ce_BiscuitPublicKey)
+    ZEND_PARSE_PARAMETERS_END();
+
+    biscuit_publickey_object *root_key = Z_BISCUIT_PUBLICKEY_P(root);
+
+    object_init_ex(return_value, ce_BiscuitToken);
+    biscuit_token_object *token = Z_BISCUIT_TOKEN_P(return_value);
+
+    token->token = biscuit_from((const uint8_t *)data, data_len, root_key->publickey);
+
+    if (!token->token) {
+        throw_biscuit_exception("Failed to deserialize sealed token");
+        RETURN_THROWS();
+    }
+}
+
+PHP_METHOD(BiscuitToken, appendBlock) {
+    zval *builder;
+    zval *keypair;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    Z_PARAM_OBJECT_OF_CLASS(builder, ce_BiscuitBlockBuilder)
+    Z_PARAM_OBJECT_OF_CLASS(keypair, ce_BiscuitKeyPair)
+    ZEND_PARSE_PARAMETERS_END();
+
+    biscuit_token_object *intern = Z_BISCUIT_TOKEN_P(ZEND_THIS);
+    biscuit_block_builder_object *block_builder = Z_BISCUIT_BLOCK_BUILDER_P(builder);
+    biscuit_keypair_object *kp = Z_BISCUIT_KEYPAIR_P(keypair);
+
+    object_init_ex(return_value, ce_BiscuitToken);
+    biscuit_token_object *new_token = Z_BISCUIT_TOKEN_P(return_value);
+
+    new_token->token = biscuit_append_block(intern->token, block_builder->block_builder, kp->keypair);
+
+    if (!new_token->token) {
+        throw_biscuit_exception("Failed to append block to token");
+        RETURN_THROWS();
+    }
+}
+
+PHP_METHOD(BiscuitToken, createAuthorizer) {
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    biscuit_token_object *intern = Z_BISCUIT_TOKEN_P(ZEND_THIS);
+
+    if (!intern->token) {
+        throw_biscuit_exception("Invalid token");
+        RETURN_THROWS();
+    }
+
+    object_init_ex(return_value, ce_BiscuitAuthorizer);
+    biscuit_authorizer_object *authorizer = Z_BISCUIT_AUTHORIZER_P(return_value);
+
+    authorizer->authorizer = biscuit_authorizer(intern->token);
+
+    if (!authorizer->authorizer) {
+        throw_biscuit_exception("Failed to create authorizer from token");
+        RETURN_THROWS();
+    }
+}
+
+PHP_METHOD(BiscuitToken, serializeSealed) {
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    biscuit_token_object *intern = Z_BISCUIT_TOKEN_P(ZEND_THIS);
+
+    if (!intern->token) {
+        throw_biscuit_exception("Invalid token");
+        RETURN_THROWS();
+    }
+
+    uintptr_t buffer_size = biscuit_sealed_size(intern->token);
+    if (!buffer_size) {
+        throw_biscuit_exception("Failed to determine serialized size");
+        RETURN_THROWS();
+    }
+
+    uint8_t *buffer = emalloc(buffer_size);
+    if (!buffer) {
+        throw_biscuit_exception("Memory allocation failed");
+        RETURN_THROWS();
+    }
+
+    uintptr_t written = biscuit_serialize_sealed(intern->token, buffer);
+
+    if (!written) {
+        efree(buffer);
+        throw_biscuit_exception("Failed to serialize sealed token");
+        RETURN_THROWS();
+    }
+
+    RETVAL_STRINGL((char *)buffer, written);
+    efree(buffer);
+}
+
+PHP_METHOD(BiscuitToken, blockCount) {
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    biscuit_token_object *intern = Z_BISCUIT_TOKEN_P(ZEND_THIS);
+
+    if (!intern->token) {
+        throw_biscuit_exception("Invalid token");
+        RETURN_THROWS();
+    }
+
+    uintptr_t count = biscuit_block_count(intern->token);
+
+    RETURN_LONG((zend_long)count);
+}
+
+PHP_METHOD(BiscuitToken, blockContext) {
+    zend_long index;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_LONG(index)
+    ZEND_PARSE_PARAMETERS_END();
+
+    biscuit_token_object *intern = Z_BISCUIT_TOKEN_P(ZEND_THIS);
+
+    if (!intern->token) {
+        throw_biscuit_exception("Invalid token");
+        RETURN_THROWS();
+    }
+
+    if (index < 0) {
+        throw_biscuit_exception("Block index cannot be negative");
+        RETURN_THROWS();
+    }
+
+    char *context = biscuit_block_context(intern->token, index);
+
+    if (!context) {
+        throw_biscuit_exception("Failed to get block context or invalid block index");
+        RETURN_THROWS();
+    }
+
+    RETVAL_STRING(context);
+    string_free(context);
+}
+
+PHP_METHOD(BiscuitToken, print) {
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    biscuit_token_object *intern = Z_BISCUIT_TOKEN_P(ZEND_THIS);
+
+    if (!intern->token) {
+        throw_biscuit_exception("Invalid token");
+        RETURN_THROWS();
+    }
+
+    const char *output = biscuit_print(intern->token);
+
+    if (!output) {
+        throw_biscuit_exception("Failed to print token");
+        RETURN_THROWS();
+    }
+
+    RETURN_STRING(output);
+}
+
+PHP_METHOD(BiscuitToken, printBlockSource) {
+    zend_long index;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_LONG(index)
+    ZEND_PARSE_PARAMETERS_END();
+
+    biscuit_token_object *intern = Z_BISCUIT_TOKEN_P(ZEND_THIS);
+
+    if (!intern->token) {
+        throw_biscuit_exception("Invalid token");
+        RETURN_THROWS();
+    }
+
+    if (index < 0) {
+        throw_biscuit_exception("Block index cannot be negative");
+        RETURN_THROWS();
+    }
+
+    const char *source = biscuit_print_block_source(intern->token, index);
+
+    if (!source) {
+        throw_biscuit_exception("Failed to get block source or invalid block index");
+        RETURN_THROWS();
+    }
+
+    RETURN_STRING(source);
+}
+
+PHP_METHOD(BiscuitBuilder, setRootKeyId) {
+    zend_long id;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_LONG(id)
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (id < 0) {
+        throw_biscuit_exception("Root key ID cannot be negative");
+        RETURN_THROWS();
+    }
+
+    biscuit_builder_object *intern = Z_BISCUIT_BUILDER_P(ZEND_THIS);
+
+    bool result = biscuit_builder_set_root_key_id(intern->builder, id);
+    RETURN_BOOL(result);
+}
+
+PHP_METHOD(BiscuitKeyPair, public) {
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    biscuit_keypair_object *intern = Z_BISCUIT_KEYPAIR_P(ZEND_THIS);
+
+    if (!intern->keypair) {
+        throw_biscuit_exception("Invalid key pair");
+        RETURN_THROWS();
+    }
+
+    object_init_ex(return_value, ce_BiscuitPublicKey);
+    biscuit_publickey_object *pubkey = Z_BISCUIT_PUBLICKEY_P(return_value);
+    pubkey->publickey = key_pair_public(intern->keypair);
+
+    if (!pubkey->publickey) {
+        throw_biscuit_exception("Failed to get public key");
+        RETURN_THROWS();
+    }
+}

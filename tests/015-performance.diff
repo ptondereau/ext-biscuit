@@ -1,0 +1,17 @@
+001- bool(true)
+002- bool(true)
+003- bool(true)
+004- bool(true)
+005- bool(true)
+006- bool(true)
+007- bool(true)
+008- bool(true)
+009- bool(true)
+010- bool(true)
+001+ Fatal error: Uncaught BiscuitException: Invalid key data length in /home/ptondereau/Code/ext-biscuit/tests/015-performance.php:17
+002+ Stack trace:
+003+ #0 /home/ptondereau/Code/ext-biscuit/tests/015-performance.php(17): BiscuitKeyPair->__construct()
+004+ #1 /home/ptondereau/Code/ext-biscuit/tests/015-performance.php(5): {closure}()
+005+ #2 /home/ptondereau/Code/ext-biscuit/tests/015-performance.php(16): measureTime(Object(Closure))
+006+ #3 {main}
+007+   thrown in /home/ptondereau/Code/ext-biscuit/tests/015-performance.php on line 17

@@ -1,0 +1,31 @@
+
+---- EXPECTED OUTPUT
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+---- ACTUAL OUTPUT
+Fatal error: Uncaught BiscuitException: Invalid key data length in /home/ptondereau/Code/ext-biscuit/tests/012-memory-management.php:5
+Stack trace:
+#0 /home/ptondereau/Code/ext-biscuit/tests/012-memory-management.php(5): BiscuitKeyPair->__construct()
+#1 /home/ptondereau/Code/ext-biscuit/tests/012-memory-management.php(38): testObjectLifecycle()
+#2 {main}
+  thrown in /home/ptondereau/Code/ext-biscuit/tests/012-memory-management.php on line 5
+---- FAILED

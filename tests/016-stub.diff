@@ -1,0 +1,24 @@
+--
+     bool(true)
+     bool(true)
+     bool(true)
+017+ bool(false)
+     bool(true)
+     bool(true)
+     bool(true)
+     bool(true)
+     bool(true)
+     bool(true)
+024+ bool(false)
+     bool(true)
+     bool(true)
+     bool(true)
+028+ 
+029+ Deprecated: Method ReflectionParameter::getClass() is deprecated in /home/ptondereau/Code/ext-biscuit/tests/016-stub.php on line 46
+     bool(true)
+031+ bool(true)
+032+ bool(false)
+     bool(true)
+     bool(true)
+     bool(true)
+--

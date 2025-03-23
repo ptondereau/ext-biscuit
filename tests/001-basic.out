@@ -1,0 +1,10 @@
+bool(true)
+string(16) "invalid argument"
+int(1)
+int(0)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+Segmentation fault (core dumped)

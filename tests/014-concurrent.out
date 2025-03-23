@@ -1,0 +1,6 @@
+Fatal error: Uncaught BiscuitException: Invalid key data length in /home/ptondereau/Code/ext-biscuit/tests/014-concurrent.php:4
+Stack trace:
+#0 /home/ptondereau/Code/ext-biscuit/tests/014-concurrent.php(4): BiscuitKeyPair->__construct()
+#1 /home/ptondereau/Code/ext-biscuit/tests/014-concurrent.php(26): worker(0)
+#2 {main}
+  thrown in /home/ptondereau/Code/ext-biscuit/tests/014-concurrent.php on line 4
