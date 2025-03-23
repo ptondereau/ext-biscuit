@@ -21,7 +21,7 @@ jobs:
           fi
           
           echo "OS_NAME=${OS_NAME}" >> $GITHUB_ENV
-          echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-version }}-${{ matrix.arch }}-${OS_NAME}.tar.gz" >> $GITHUB_ENV
+          echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-versions }}-${{ matrix.arch }}-${{ env.OS_NAME }}.tar.gz" >> $GITHUB_ENV
 
       - name: Download Biscuit library
         run: |
