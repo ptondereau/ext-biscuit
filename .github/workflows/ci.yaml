@@ -22,11 +22,10 @@ jobs:
           
           echo "OS_NAME=${OS_NAME}" >> $GITHUB_ENV
           echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-version }}-${{ matrix.arch }}-${OS_NAME}.tar.gz" >> $GITHUB_ENV
-          echo $ASSET_NAME
 
       - name: Download Biscuit library
         run: |
-          curl -L -o biscuit.tar.gz https://github.com/eclipse-biscuit/biscuit-rust/releases/download/${{ matrix.biscuit-version }}/$ASSET_NAME
+          curl -L -o biscuit.tar.gz https://github.com/eclipse-biscuit/biscuit-rust/releases/download/${{ matrix.biscuit-versions }}/$ASSET_NAME
 
       - name: Extract Biscuit library
         run: |
