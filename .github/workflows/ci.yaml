@@ -1,32 +1,50 @@
 name: Build and Test
 on: [push, pull_request]
 jobs:
-  biscuit-capi:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout biscuit-auth/biscuit-rust
-        uses: actions/checkout@v4
-        with:
-          repository: "biscuit-auth/biscuit-rust"
-          path: "biscuit-auth"
-      - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-      - name: Setup Cargo-C
-        run: cargo install cargo-c
-      - name: Build Biscuit
-        run: |
-          cd biscuit-auth
-          cargo cbuild --destdir=/usr/local --prefix=/ --release --features="capi"
-
   php-build:
-    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
-    runs-on: ${{ matrix.operating-system }}
-    needs: [biscuit-capi]
+    name: PHP ${{ matrix.php-version }} on ${{ matrix.os }} (${{ matrix.arch }}) with Biscuit ${{ matrix.biscuit-version }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        operating-system: ["ubuntu-latest"]
+        os: ["ubuntu-latest", "macos-latest"]
         php-versions: ["8.1", "8.2", "8.3", "8.4"]
+        arch: ["x86_x64", "arm64"]
+        biscuit-versions: ["6.0.0-beta.2"]
     steps:
+      - name: Set asset name based on OS and architecture
+        id: set-asset-name
+        run: |
+          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            OS_NAME="linux"
+          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+            OS_NAME="macos"
+          fi
+          
+          echo "OS_NAME=${OS_NAME}" >> $GITHUB_ENV
+          echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-version }}-${{ matrix.arch }}-${OS_NAME}.tar.gz" >> $GITHUB_ENV
+
+      - name: Download Biscuit library
+        run: |
+          curl -L -o biscuit.tar.gz https://github.com/eclipse-biscuit/biscuit-rust/releases/download/${{ matrix.biscuit-version }}/${ASSET_NAME}
+
+      - name: Extract Biscuit library
+        run: |
+          mkdir -p biscuit-lib
+          tar -xzf biscuit.tar.gz -C biscuit-lib
+
+      - name: Install Biscuit library (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo cp -r biscuit-lib/usr/local/lib/* /usr/local/lib/
+          sudo cp -r biscuit-lib/usr/local/include/* /usr/local/include/
+          sudo ldconfig
+
+      - name: Install Biscuit library (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          sudo cp -r biscuit-lib/usr/local/lib/* /usr/local/lib/
+          sudo cp -r biscuit-lib/usr/local/include/* /usr/local/include/    
+
       - name: Checkout
         uses: actions/checkout@v4
 
