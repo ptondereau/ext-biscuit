@@ -364,10 +364,13 @@ PHP_MSHUTDOWN_FUNCTION(biscuit) { return SUCCESS; }
 
 /* Module info */
 PHP_MINFO_FUNCTION(biscuit) {
+    char version[32];
+    snprintf(version, sizeof(version), "%d.%d.%d", BISCUIT_AUTH_MAJOR, BISCUIT_AUTH_MINOR, BISCUIT_AUTH_PATCH);
+
     php_info_print_table_start();
     php_info_print_table_header(2, "biscuit support", "enabled");
     php_info_print_table_row(2, "Version", PHP_BISCUIT_VERSION);
-    php_info_print_table_row(2, "Biscuit C API Version", BISCUIT_AUTH_MAJOR "." BISCUIT_AUTH_MINOR "." BISCUIT_AUTH_PATCH);
+    php_info_print_table_row(2, "Biscuit C API Version", version);
     php_info_print_table_row(2, "Official Website", "https://www.biscuitsec.org/");
     php_info_print_table_row(2, "Copyright", "2025 Eclipse Foundation");
     php_info_print_table_end();
