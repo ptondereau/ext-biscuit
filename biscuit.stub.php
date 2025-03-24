@@ -84,7 +84,7 @@ class BiscuitKeyPair {
         string $seed = "",
         int $algorithm = BISCUIT_ALGORITHM_ED25519
     ) {}
-    public function public(): BiscuitPublicKey {}
+    public function getPublicKey(): BiscuitPublicKey {}
     public function serialize(): string {}
     public static function deserialize(
         string $data,

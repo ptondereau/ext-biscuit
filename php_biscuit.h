@@ -121,18 +121,6 @@ extern zend_class_entry *ce_BiscuitAuthorizer;
 extern zend_class_entry *ce_BiscuitAuthorizerBuilder;
 extern zend_class_entry *ce_BiscuitException;
 
-PHP_MINIT_FUNCTION(biscuit);
-PHP_MSHUTDOWN_FUNCTION(biscuit);
-PHP_MINFO_FUNCTION(biscuit);
-
-PHP_FUNCTION(biscuit_error_message);
-PHP_FUNCTION(biscuit_error_kind);
-PHP_FUNCTION(biscuit_error_check_count);
-PHP_FUNCTION(biscuit_error_check_id);
-PHP_FUNCTION(biscuit_error_check_block_id);
-PHP_FUNCTION(biscuit_error_check_rule);
-PHP_FUNCTION(biscuit_error_check_is_authorizer);
-
 extern zend_module_entry biscuit_module_entry;
 #define phpext_biscuit_ptr &biscuit_module_entry
 

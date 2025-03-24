@@ -1,0 +1,84 @@
+name: Release Build
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [created]
+
+jobs:
+  php-release-build:
+    name: PHP ${{ matrix.php-versions }} ${{ matrix.zts }} on Linux (x86_64)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-versions: ["8.1", "8.2", "8.3", "8.4"]
+        zts: ["", "-zts"]
+        biscuit-versions: ["6.0.0-beta.2"]
+    
+    steps:
+      - name: Set asset name for Biscuit library
+        id: set-asset-name
+        run: |
+          echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-versions }}-x86_64-linux.tar.gz" >> $GITHUB_ENV
+
+      - name: Download Biscuit library
+        run: |
+          curl -L -o biscuit.tar.gz https://github.com/eclipse-biscuit/biscuit-rust/releases/download/${{ matrix.biscuit-versions }}/${{ env.ASSET_NAME }}
+
+      - name: Extract Biscuit library
+        run: |
+          mkdir -p biscuit-lib
+          tar -xzf biscuit.tar.gz -C biscuit-lib
+
+      - name: Install Biscuit library
+        run: |
+          sudo cp -r biscuit-lib/usr/lib/* /usr/lib/
+          sudo cp -r biscuit-lib/usr/include/* /usr/include/
+          sudo ldconfig
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          ini-values: error_reporting=-1, display_errors=On
+          coverage: none
+          zts: ${{ matrix.zts != '' }}
+        env:
+          debug: true
+
+      - name: phpize
+        run: phpize
+
+      - name: configure
+        run: ./configure --with-biscuit
+
+      - name: make
+        run: make
+
+      - name: test
+        run: env NO_INTERACTION=1 make test
+
+      - name: Prepare extension artifact
+        run: |
+          mkdir -p dist
+          cp modules/biscuit.so dist/biscuit-php${{ matrix.php-versions }}${{ matrix.zts }}.so
+          cd dist && sha256sum biscuit-php${{ matrix.php-versions }}${{ matrix.zts }}.so > biscuit-php${{ matrix.php-versions }}${{ matrix.zts }}.so.sha256
+
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: biscuit-php${{ matrix.php-versions }}${{ matrix.zts }}
+          path: dist/
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/biscuit-php${{ matrix.php-versions }}${{ matrix.zts }}.so
+            dist/biscuit-php${{ matrix.php-versions }}${{ matrix.zts }}.so.sha256

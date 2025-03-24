@@ -58,14 +58,6 @@ PHP_METHOD(BiscuitKeyPair, __construct) {
     }
 }
 
-PHP_METHOD(BiscuitKeyPair, getPublicKey) {
-    biscuit_keypair_object *intern = Z_BISCUIT_KEYPAIR_P(ZEND_THIS);
-
-    object_init_ex(return_value, ce_BiscuitPublicKey);
-    biscuit_publickey_object *pubkey = Z_BISCUIT_PUBLICKEY_P(return_value);
-    pubkey->publickey = key_pair_public(intern->keypair);
-}
-
 PHP_METHOD(BiscuitKeyPair, serialize) {
     ZEND_PARSE_PARAMETERS_NONE();
 
@@ -739,7 +731,7 @@ PHP_METHOD(BiscuitBuilder, setRootKeyId) {
     RETURN_BOOL(result);
 }
 
-PHP_METHOD(BiscuitKeyPair, public) {
+PHP_METHOD(BiscuitKeyPair, getPublicKey) {
     ZEND_PARSE_PARAMETERS_NONE();
 
     biscuit_keypair_object *intern = Z_BISCUIT_KEYPAIR_P(ZEND_THIS);

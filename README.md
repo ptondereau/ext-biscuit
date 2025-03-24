@@ -1,3 +1,6 @@
+> [!WARNING]  
+> The PHP extension is still ine BETA and maybe not suitable for production for now
+
 # PHP Biscuit Extension
 
 This extension provides PHP bindings for the [Biscuit](https://github.com/biscuit-auth/biscuit) authorization library. Biscuit is a bearer token format with decentralized verification and offline attenuation.
@@ -5,14 +8,16 @@ This extension provides PHP bindings for the [Biscuit](https://github.com/biscui
 ## Requirements
 
 - PHP 8.1.0 or later (up to PHP 8.4)
-- Biscuit library installed on your system (libbiscuit_auth.so.6.0.0)
-- A C compiler and build tools
+- Biscuit library installed on your system (libbiscuit_auth.so) if you want to build it from sources
+
+> [!IMPORTANT]  
+> We doesn't support Windows build for the moment
 
 ## Installation
 
 1. Ensure the Biscuit library is installed:
-   - Library should be in `/usr/lib/libbiscuit_auth.so.6.0.0`
-   - Headers should be in `/usr/include/biscuit_capi/biscuit_auth.h`
+
+If not, you can download the library with your corresponding OS and architecture here: https://github.com/eclipse-biscuit/biscuit-rust/releases
 
 2. Build and install the extension:
 ```bash
@@ -32,15 +37,11 @@ extension=biscuit.so
 ### Creating a Key Pair
 
 ```php
-// Create a new key pair
-$kp = new BiscuitKeyPair();
-
-// Or create with a specific seed
-$seed = random_bytes(32);
-$kp = new BiscuitKeyPair($seed);
+$seed = random_bytes(32); // or any string
+$kp = new BiscuitKeyPair($seed, BISCUIT_ALGORITHM_ED25519);
 
 // Get the public key
-$publicKey = $kp->public();
+$publicKey = $kp->getPublicKey();
 ```
 
 ### Building a Token
@@ -49,13 +50,20 @@ $publicKey = $kp->public();
 // Create a builder
 $builder = new BiscuitBuilder();
 
+// Set context (optional)
+$builder->setContext('app_v1');
+
 // Add facts and rules
 $builder->addFact('user("1234")');
 $builder->addFact('right("read")');
 $builder->addRule('allow($user, $right) <- user($user), right($right)');
 
-// Build the token
-$token = $builder->build($kp);
+// Add a check (optional)
+$builder->addCheck('check if user($id), $id == "1234"');
+
+// Build the token (with optional random seed)
+$seed = random_bytes(32);
+$token = $builder->build($kp, $seed);
 ```
 
 ### Adding Blocks
@@ -64,32 +72,35 @@ $token = $builder->build($kp);
 // Create a block builder
 $blockBuilder = new BiscuitBlockBuilder();
 
+// Set context (optional)
+$blockBuilder->setContext('block_v1');
+
 // Add facts and rules to the block
 $blockBuilder->addFact('resource("file1.txt")');
 $blockBuilder->addRule('can_access($user, $resource) <- user($user), resource($resource)');
 
 // Append the block to the token
-$newToken = $token->appendBlock($blockBuilder);
+$newToken = $token->appendBlock($blockBuilder, $kp);
 ```
 
 ### Authorization
 
 ```php
 // Create an authorizer
-$authorizer = $token->authorizer();
+$authorizer = $token->createAuthorizer();
 
-// Add facts and rules for authorization
-$authorizer->addFact('current_time("14:30")');
-$authorizer->addRule('during_business_hours($time) <- $time >= "09:00", $time <= "17:00"');
-
-// Add policies
-$authorizer->addPolicy('allow if can_access($user, $resource), during_business_hours($time)');
+// Alternatively, use the builder pattern
+$authBuilder = new BiscuitAuthorizerBuilder();
+$authBuilder->addFact('current_time("14:30")')
+    ->addRule('during_business_hours($time) <- $time >= "09:00", $time <= "17:00"')
+    ->addPolicy('allow if can_access($user, $resource), during_business_hours($time)');
+$authorizer = $authBuilder->build($token);
 
 // Check authorization
 if ($authorizer->authorize()) {
     echo "Access granted\n";
 } else {
-    echo "Access denied\n";
+    echo "Access denied: " . biscuit_error_message() . "\n";
 }
 ```
 
@@ -98,73 +109,38 @@ if ($authorizer->authorize()) {
 ```php
 // Serialize a key pair
 $serializedKp = $kp->serialize();
-$deserializedKp = BiscuitKeyPair::deserialize($serializedKp);
+$deserializedKp = BiscuitKeyPair::deserialize($serializedKp, BISCUIT_ALGORITHM_ED25519);
 
 // Serialize a public key
 $serializedPk = $publicKey->serialize();
-$deserializedPk = BiscuitPublicKey::deserialize($serializedPk);
+$deserializedPk = BiscuitPublicKey::deserialize($serializedPk, BISCUIT_ALGORITHM_ED25519);
 
 // Serialize a token
 $serializedToken = $token->serialize();
-$deserializedToken = BiscuitToken::deserialize($serializedToken);
+
+// Serialize a token in sealed mode
+$sealedToken = $token->serializeSealed();
+$deserializedToken = BiscuitToken::fromSealed($sealedToken, $publicKey);
 ```
 
-## Classes and Methods
+### Inspection and Debugging
 
-### BiscuitKeyPair
-- `__construct(?string $seed = null, int $algorithm = Ed25519)`
-- `public(): BiscuitPublicKey`
-- `serialize(): string`
-- `deserialize(string $data, int $algorithm = Ed25519): BiscuitKeyPair`
+```php
+// Print token information
+echo $token->print();
 
-### BiscuitPublicKey
-- `serialize(): string`
-- `deserialize(string $data, int $algorithm = Ed25519): BiscuitPublicKey`
+// Get block source
+echo $token->printBlockSource(0); // Print the first block
 
-### BiscuitBuilder
-- `__construct()`
-- `setContext(string $context): bool`
-- `addFact(string $fact): bool`
-- `addRule(string $rule): bool`
-- `addCheck(string $check): bool`
-- `build(BiscuitKeyPair $kp, ?string $seed = null): BiscuitToken`
+// Get block count
+$blockCount = $token->blockCount();
 
-### BiscuitToken
-- `serialize(): string`
-- `deserialize(string $data): BiscuitToken`
-- `appendBlock(BiscuitBlockBuilder $builder): BiscuitToken`
-- `authorizer(): BiscuitAuthorizer`
+// Get block context
+$context = $token->blockContext(1); // Get context of the second block
 
-### BiscuitBlockBuilder
-- `__construct()`
-- `addFact(string $fact): bool`
-- `addRule(string $rule): bool`
-- `addCheck(string $check): bool`
-
-### BiscuitAuthorizer
-- `addFact(string $fact): bool`
-- `addRule(string $rule): bool`
-- `addPolicy(string $policy): bool`
-- `authorize(): bool`
-
-### BiscuitAuthorizerBuilder
-- `__construct()`
-- `addFact(string $fact): bool`
-- `addRule(string $rule): bool`
-- `addPolicy(string $policy): bool`
-- `build(BiscuitToken $token): BiscuitAuthorizer`
-
-## Error Handling
-
-The extension provides global functions for error handling:
-
-- `biscuit_error_message(): string` - Get the last error message
-- `biscuit_error_kind(): int` - Get the last error kind
-- `biscuit_error_check_count(): int` - Get the number of failed checks
-
-## Constants
-
-- `Ed25519` - Algorithm constant for Ed25519 signatures
+// Print authorizer state
+echo $authorizer->print();
+```
 
 ## Testing
 

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: f663160389cde894163280ead286d272b89059da */
+ * Stub hash: 1a379e6e14ce6098a44a171c54d0a6deb3af239f */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_biscuit_error_message, 0, 0, IS_STRING, 0)
 ZEND_END_ARG_INFO()
@@ -28,7 +28,7 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_class_BiscuitKeyPair___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, algorithm, IS_LONG, 0, "BISCUIT_ALGORITHM_ED25519")
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_BiscuitKeyPair_public, 0, 0, BiscuitPublicKey, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_BiscuitKeyPair_getPublicKey, 0, 0, BiscuitPublicKey, 0)
 ZEND_END_ARG_INFO()
 
 #define arginfo_class_BiscuitKeyPair_serialize arginfo_biscuit_error_message
@@ -156,7 +156,7 @@ ZEND_FUNCTION(biscuit_error_check_block_id);
 ZEND_FUNCTION(biscuit_error_check_rule);
 ZEND_FUNCTION(biscuit_error_check_is_authorizer);
 ZEND_METHOD(BiscuitKeyPair, __construct);
-ZEND_METHOD(BiscuitKeyPair, public);
+ZEND_METHOD(BiscuitKeyPair, getPublicKey);
 ZEND_METHOD(BiscuitKeyPair, serialize);
 ZEND_METHOD(BiscuitKeyPair, deserialize);
 ZEND_METHOD(BiscuitPublicKey, serialize);
@@ -207,7 +207,7 @@ static const zend_function_entry ext_functions[] = {
 
 static const zend_function_entry class_BiscuitKeyPair_methods[] = {
 	ZEND_ME(BiscuitKeyPair, __construct, arginfo_class_BiscuitKeyPair___construct, ZEND_ACC_PUBLIC)
-	ZEND_ME(BiscuitKeyPair, public, arginfo_class_BiscuitKeyPair_public, ZEND_ACC_PUBLIC)
+	ZEND_ME(BiscuitKeyPair, getPublicKey, arginfo_class_BiscuitKeyPair_getPublicKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(BiscuitKeyPair, serialize, arginfo_class_BiscuitKeyPair_serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(BiscuitKeyPair, deserialize, arginfo_class_BiscuitKeyPair_deserialize, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_FE_END

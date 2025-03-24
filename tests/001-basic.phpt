@@ -27,7 +27,7 @@ $keypair2 = new BiscuitKeyPair($seed, BISCUIT_ALGORITHM_ED25519);
 var_dump($keypair2 instanceof BiscuitKeyPair);
 
 // Test PublicKey derivation
-$pubkey = $keypair2->public();
+$pubkey = $keypair2->getPublicKey();
 var_dump($pubkey instanceof BiscuitPublicKey);
 
 // Test serialization
