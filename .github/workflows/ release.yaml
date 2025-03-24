@@ -3,8 +3,9 @@ on:
   push:
     tags:
       - 'v*'
-  release:
-    types: [created]
+
+permissions:
+  contents: write
 
 jobs:
   php-release-build:
