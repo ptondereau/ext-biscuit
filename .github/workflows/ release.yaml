@@ -65,19 +65,12 @@ jobs:
       - name: Prepare extension artifact
         run: |
           mkdir -p dist
-          cp modules/biscuit.so dist/biscuit-php${{ matrix.php-versions }}-${{ matrix.zts }}.so
-          cd dist && sha256sum biscuit-php${{ matrix.php-versions }}-${{ matrix.zts }}.so > biscuit-php${{ matrix.php-versions }}-${{ matrix.zts }}.so.sha256
-
-      - name: Upload extension artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: biscuit-php${{ matrix.php-versions }}-${{ matrix.zts }}
-          path: dist/
+          cp modules/biscuit.so dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.zts }}.so
+          cd dist && sha256sum biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.zts }}.so > biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.zts }}.so.sha256
 
       - name: Upload to Release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/biscuit-php${{ matrix.php-versions }}-${{ matrix.zts }}.so
-            dist/biscuit-php${{ matrix.php-versions }}-${{ matrix.zts }}.so.sha256
+            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.zts }}.so
+            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.zts }}.so.sha256
