@@ -13,6 +13,10 @@ This extension provides PHP bindings for the [Biscuit](https://github.com/biscui
 > [!IMPORTANT]  
 > We doesn't support Windows build for the moment
 
+## API not available
+
+- [ThirdParty block](https://doc.biscuitsec.org/reference/specifications#appending-a-third-party-block)
+
 ## Installation
 
 1. Ensure the Biscuit library is installed:
