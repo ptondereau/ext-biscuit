@@ -59,7 +59,7 @@ jobs:
           sudo cp -r biscuit-lib/usr/include/* /usr/local/include/
           echo "DYLD_LIBRARY_PATH=/usr/local/lib" >> $GITHUB_ENV
           echo "LIBRARY_PATH=/usr/local/lib" >> $GITHUB_ENV
-          sudo dylib_installer /usr/local/lib/ /usr/local/include/ -n biscuit_auth -t /usr/local/lib -r /usr/local/include
+          sudo dylib_installer /usr/local/lib/ /usr/local/include/ -n biscuit_auth -t /usr/local/lib -r /usr/local/include -p /usr/local/lib/pkgconfig
 
       - name: Checkout
         uses: actions/checkout@v4
