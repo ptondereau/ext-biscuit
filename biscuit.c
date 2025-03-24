@@ -4,6 +4,7 @@
 #include "config.h"
 #endif
 
+// clang-format off
 #include "php.h"
 #include "ext/standard/info.h"
 #include "zend_exceptions.h"
@@ -11,6 +12,7 @@
 
 #include "biscuit_arginfo.h"
 #include "php_biscuit.h"
+// clang-format on
 
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
@@ -239,10 +241,33 @@ PHP_FUNCTION(biscuit_error_check_is_authorizer) {
 PHP_MINIT_FUNCTION(biscuit) {
     zend_class_entry ce;
 
-    /* Initialize object handlers */
     memcpy(&biscuit_keypair_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     biscuit_keypair_object_handlers.offset = XtOffsetOf(biscuit_keypair_object, std);
     biscuit_keypair_object_handlers.free_obj = php_biscuit_keypair_free_obj;
+
+    memcpy(&biscuit_publickey_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    biscuit_publickey_object_handlers.offset = XtOffsetOf(biscuit_publickey_object, std);
+    biscuit_publickey_object_handlers.free_obj = php_biscuit_publickey_free_obj;
+
+    memcpy(&biscuit_token_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    biscuit_token_object_handlers.offset = XtOffsetOf(biscuit_token_object, std);
+    biscuit_token_object_handlers.free_obj = php_biscuit_token_free_obj;
+
+    memcpy(&biscuit_builder_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    biscuit_builder_object_handlers.offset = XtOffsetOf(biscuit_builder_object, std);
+    biscuit_builder_object_handlers.free_obj = php_biscuit_builder_free_obj;
+
+    memcpy(&biscuit_block_builder_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    biscuit_block_builder_object_handlers.offset = XtOffsetOf(biscuit_block_builder_object, std);
+    biscuit_block_builder_object_handlers.free_obj = php_biscuit_block_builder_free_obj;
+
+    memcpy(&biscuit_authorizer_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    biscuit_authorizer_object_handlers.offset = XtOffsetOf(biscuit_authorizer_object, std);
+    biscuit_authorizer_object_handlers.free_obj = php_biscuit_authorizer_free_obj;
+
+    memcpy(&biscuit_authorizer_builder_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    biscuit_authorizer_builder_object_handlers.offset = XtOffsetOf(biscuit_authorizer_builder_object, std);
+    biscuit_authorizer_builder_object_handlers.free_obj = php_biscuit_authorizer_builder_free_obj;
 
     /* Register BiscuitException class */
     INIT_CLASS_ENTRY(ce, "BiscuitException", NULL);

@@ -1,10 +1,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+// clang-format off
 #include "php.h"
 #include "zend_exceptions.h"
 #include "biscuit_capi/biscuit_auth.h"
 #include "php_biscuit.h"
+// clang-format on
 
 /* Constants */
 #define BISCUIT_KEY_SIZE 32
