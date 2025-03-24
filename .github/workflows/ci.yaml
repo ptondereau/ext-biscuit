@@ -15,15 +15,9 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             arch: x86_64
-          # - os: ubuntu-latest
-          #   platform: linux
-          #   arch: arm64
           - os: macos-latest
             platform: macos
             arch: arm64
-          - os: macos-latest
-            platform: macos
-            arch: x86_64
     steps:
       - name: Set asset name based on OS and architecture
         id: set-asset-name
@@ -59,7 +53,7 @@ jobs:
           sudo cp -r biscuit-lib/usr/include/* /usr/local/include/
           echo "DYLD_LIBRARY_PATH=/usr/local/lib" >> $GITHUB_ENV
           echo "LIBRARY_PATH=/usr/local/lib" >> $GITHUB_ENV
-          sudo dylib_installer /usr/local/lib/ /usr/local/include/ -n biscuit_auth -t /usr/local/lib -r /usr/local/include -p /usr/local/lib/pkgconfig
+          sudo dylib_installer /usr/local/lib/ /usr/local/include/ -n biscuit_auth
 
       - name: Checkout
         uses: actions/checkout@v4
