@@ -236,6 +236,7 @@ PHP_METHOD(BiscuitBuilder, build) {
     token->token = biscuit_builder_build(intern->builder, kp->keypair, (const uint8_t *)seed, seed_len);
 
     if (!token->token) {
+        intern->builder = NULL;
         throw_biscuit_exception("Failed to build token");
         RETURN_THROWS();
     }
@@ -286,8 +287,8 @@ PHP_METHOD(BiscuitAuthorizerBuilder, __construct) {
 
     intern->authorizer_builder = authorizer_builder();
     if (!intern->authorizer_builder) {
-        zend_throw_exception(ce_BiscuitException, "Failed to create authorizer builder", 0);
-        RETURN_NULL();
+        throw_biscuit_exception("Failed to create authorizer builder");
+        RETURN_THROWS();
     }
 }
 
@@ -382,9 +383,12 @@ PHP_METHOD(BiscuitAuthorizerBuilder, build) {
 
     auth->authorizer = authorizer_builder_build(intern->authorizer_builder, token_obj->token);
     if (!auth->authorizer) {
-        zend_throw_exception(ce_BiscuitException, "Failed to build authorizer", 0);
-        RETURN_NULL();
+        intern->authorizer_builder = NULL;
+        throw_biscuit_exception("Failed to build authorizer");
+        RETURN_THROWS();
     }
+
+    intern->authorizer_builder = authorizer_builder();
 }
 
 PHP_METHOD(BiscuitAuthorizerBuilder, buildUnauthenticated) {
@@ -397,9 +401,12 @@ PHP_METHOD(BiscuitAuthorizerBuilder, buildUnauthenticated) {
 
     auth->authorizer = authorizer_builder_build_unauthenticated(intern->authorizer_builder);
     if (!auth->authorizer) {
-        zend_throw_exception(ce_BiscuitException, "Failed to build unauthenticated authorizer", 0);
-        RETURN_NULL();
+        intern->authorizer_builder = NULL;
+        throw_biscuit_exception("Failed to build unauthenticated authorizer");
+        RETURN_THROWS();
     }
+
+    intern->authorizer_builder = authorizer_builder();
 }
 
 /* ========================= BiscuitAuthorizer methods ========================= */

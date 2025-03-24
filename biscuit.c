@@ -306,6 +306,7 @@ PHP_MINIT_FUNCTION(biscuit) {
     /* Register BiscuitAuthorizerBuilder class */
     INIT_CLASS_ENTRY(ce, "BiscuitAuthorizerBuilder", class_BiscuitAuthorizerBuilder_methods);
     ce_BiscuitAuthorizerBuilder = zend_register_internal_class(&ce);
+    ce_BiscuitAuthorizerBuilder->create_object = php_biscuit_authorizer_builder_create_object;
 
     /* Register error constants */
     REGISTER_LONG_CONSTANT("BISCUIT_ERROR_NONE", None, CONST_CS | CONST_PERSISTENT);
