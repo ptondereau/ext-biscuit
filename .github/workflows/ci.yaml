@@ -49,6 +49,8 @@ jobs:
       - name: Install Biscuit library (macOS)
         if: matrix.os == 'macos-latest'
         run: |
+          brew tap hackerchai/tap
+          brew install dylib-installer
           sudo mkdir -p /usr/local/lib
           sudo mkdir -p /usr/local/include
           sudo chmod 755 /usr/local/lib
@@ -57,6 +59,7 @@ jobs:
           sudo cp -r biscuit-lib/usr/include/* /usr/local/include/
           echo "DYLD_LIBRARY_PATH=/usr/local/lib" >> $GITHUB_ENV
           echo "LIBRARY_PATH=/usr/local/lib" >> $GITHUB_ENV
+          dylib_installer /usr/local/lib/ /usr/local/include/ -n biscuit_auth -t /usr/local/lib -r /usr/local/include
 
       - name: Checkout
         uses: actions/checkout@v4
