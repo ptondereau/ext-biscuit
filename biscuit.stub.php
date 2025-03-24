@@ -108,14 +108,14 @@ class BiscuitPublicKey {
  */
 class BiscuitBuilder {
     public function __construct() {}
-    public function setContext(string $context): bool {}
-    public function setRootKeyId(int $id): bool {}
-    public function addFact(string $fact): bool {}
-    public function addRule(string $rule): bool {}
-    public function addCheck(string $check): bool {}
+    public function setContext(string $context): BiscuitBuilder {}
+    public function setRootKeyId(int $id): BiscuitBuilder {}
+    public function addFact(string $fact): BiscuitBuilder {}
+    public function addRule(string $rule): BiscuitBuilder {}
+    public function addCheck(string $check): BiscuitBuilder {}
     public function build(
         BiscuitKeyPair $keypair,
-        string $seed = ""
+        string $seed
     ): BiscuitToken {}
 }
 
@@ -145,10 +145,10 @@ class BiscuitToken {
  */
 class BiscuitBlockBuilder {
     public function __construct() {}
-    public function setContext(string $context): bool {}
-    public function addFact(string $fact): bool {}
-    public function addRule(string $rule): bool {}
-    public function addCheck(string $check): bool {}
+    public function setContext(string $context): BiscuitBlockBuilder {}
+    public function addFact(string $fact): BiscuitBlockBuilder {}
+    public function addRule(string $rule): BiscuitBlockBuilder {}
+    public function addCheck(string $check): BiscuitBlockBuilder {}
 }
 
 /**
@@ -156,10 +156,10 @@ class BiscuitBlockBuilder {
  */
 class BiscuitAuthorizerBuilder {
     public function __construct() {}
-    public function addFact(string $fact): bool {}
-    public function addRule(string $rule): bool {}
-    public function addCheck(string $check): bool {}
-    public function addPolicy(string $policy): bool {}
+    public function addFact(string $fact): BiscuitAuthorizerBuilder {}
+    public function addRule(string $rule): BiscuitAuthorizerBuilder {}
+    public function addCheck(string $check): BiscuitAuthorizerBuilder {}
+    public function addPolicy(string $policy): BiscuitAuthorizerBuilder {}
     public function build(BiscuitToken $token): BiscuitAuthorizer {}
     public function buildUnauthenticated(): BiscuitAuthorizer {}
 }

@@ -12,7 +12,8 @@ if (!extension_loaded('biscuit')) {
 try {
     $keypair = new BiscuitKeyPair();
 } catch (BiscuitException $e) {
-    var_dump($e->getMessage() === "Invalid key data length");
+    var_dump($e->getMessage());
+    var_dump($e->getCode());
 }
 
 // Test error handling functions
@@ -40,7 +41,8 @@ var_dump($deserialized instanceof BiscuitKeyPair);
 
 ?>
 --EXPECT--
-bool(true)
+string(29) "Invalid key: invalid argument"
+int(1)
 string(16) "invalid argument"
 int(1)
 int(0)

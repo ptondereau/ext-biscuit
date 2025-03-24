@@ -14,7 +14,20 @@
 #define DEFAULT_ALGORITHM Ed25519
 
 /* Helper functions */
-static void throw_biscuit_exception(const char *message) { zend_throw_exception(ce_BiscuitException, message, 0); }
+static void throw_biscuit_exception(const char *message) {
+    char error_buffer[2048] = {0};
+    const char *lib_error = error_message();
+    int64_t code = 0;
+
+    if (lib_error && strlen(lib_error) > 0) {
+        snprintf(error_buffer, sizeof(error_buffer), "%s: %s", message, lib_error);
+        code = error_kind();
+    } else {
+        snprintf(error_buffer, sizeof(error_buffer), "%s", message);
+    }
+
+    zend_throw_exception(ce_BiscuitException, error_buffer, code);
+}
 
 static bool check_key_data_length(size_t data_len) {
     if (data_len != BISCUIT_KEY_SIZE) {
@@ -40,7 +53,7 @@ PHP_METHOD(BiscuitKeyPair, __construct) {
     intern->keypair = key_pair_new((uint8_t *)seed, seed_len, algorithm);
 
     if (!intern->keypair) {
-        throw_biscuit_exception("Invalid key data length");
+        throw_biscuit_exception("Invalid key");
         RETURN_THROWS();
     }
 }
@@ -146,7 +159,14 @@ PHP_METHOD(BiscuitBuilder, setContext) {
     ZEND_PARSE_PARAMETERS_END();
 
     biscuit_builder_object *intern = Z_BISCUIT_BUILDER_P(ZEND_THIS);
-    RETURN_BOOL(biscuit_builder_set_context(intern->builder, context));
+    bool result = biscuit_builder_set_context(intern->builder, context);
+
+    if (result) {
+        RETURN_ZVAL(getThis(), 1, 0);
+    }
+
+    throw_biscuit_exception("Failed to set context");
+    RETURN_THROWS();
 }
 
 PHP_METHOD(BiscuitBuilder, addFact) {
@@ -158,7 +178,14 @@ PHP_METHOD(BiscuitBuilder, addFact) {
     ZEND_PARSE_PARAMETERS_END();
 
     biscuit_builder_object *intern = Z_BISCUIT_BUILDER_P(ZEND_THIS);
-    RETURN_BOOL(biscuit_builder_add_fact(intern->builder, fact));
+    bool result = biscuit_builder_add_fact(intern->builder, fact);
+
+    if (result) {
+        RETURN_ZVAL(getThis(), 1, 0);
+    }
+
+    throw_biscuit_exception("Failed to add fact");
+    RETURN_THROWS();
 }
 
 PHP_METHOD(BiscuitBuilder, addRule) {
@@ -170,7 +197,14 @@ PHP_METHOD(BiscuitBuilder, addRule) {
     ZEND_PARSE_PARAMETERS_END();
 
     biscuit_builder_object *intern = Z_BISCUIT_BUILDER_P(ZEND_THIS);
-    RETURN_BOOL(biscuit_builder_add_rule(intern->builder, rule));
+    bool result = biscuit_builder_add_rule(intern->builder, rule);
+
+    if (result) {
+        RETURN_ZVAL(getThis(), 1, 0);
+    }
+
+    throw_biscuit_exception("Failed to add rule");
+    RETURN_THROWS();
 }
 
 PHP_METHOD(BiscuitBuilder, addCheck) {
@@ -182,7 +216,14 @@ PHP_METHOD(BiscuitBuilder, addCheck) {
     ZEND_PARSE_PARAMETERS_END();
 
     biscuit_builder_object *intern = Z_BISCUIT_BUILDER_P(ZEND_THIS);
-    RETURN_BOOL(biscuit_builder_add_check(intern->builder, check));
+    bool result = biscuit_builder_add_check(intern->builder, check);
+
+    if (result) {
+        RETURN_ZVAL(getThis(), 1, 0);
+    }
+
+    throw_biscuit_exception("Failed to add check");
+    RETURN_THROWS();
 }
 
 PHP_METHOD(BiscuitBuilder, build) {
@@ -190,9 +231,8 @@ PHP_METHOD(BiscuitBuilder, build) {
     char *seed = NULL;
     size_t seed_len = 0;
 
-    ZEND_PARSE_PARAMETERS_START(1, 2)
+    ZEND_PARSE_PARAMETERS_START(2, 2)
     Z_PARAM_OBJECT_OF_CLASS(keypair, ce_BiscuitKeyPair)
-    Z_PARAM_OPTIONAL
     Z_PARAM_STRING(seed, seed_len)
     ZEND_PARSE_PARAMETERS_END();
 
@@ -207,6 +247,8 @@ PHP_METHOD(BiscuitBuilder, build) {
         throw_biscuit_exception("Failed to build token");
         RETURN_THROWS();
     }
+
+    intern->builder = biscuit_builder();
 }
 
 /* ========================= BiscuitToken methods ========================= */
@@ -214,17 +256,37 @@ PHP_METHOD(BiscuitToken, serialize) {
     ZEND_PARSE_PARAMETERS_NONE();
 
     biscuit_token_object *intern = Z_BISCUIT_TOKEN_P(ZEND_THIS);
-    uint8_t *buffer = NULL;
-    size_t written = biscuit_serialize(intern->token, buffer);
+
+    if (!intern->token) {
+        throw_biscuit_exception("Invalid token");
+        RETURN_THROWS();
+    }
+
+    uintptr_t buffer_size = biscuit_serialized_size(intern->token);
+    if (!buffer_size) {
+        throw_biscuit_exception("Failed to determine serialized size");
+        RETURN_THROWS();
+    }
+
+    uint8_t *buffer = emalloc(buffer_size);
+    if (!buffer) {
+        throw_biscuit_exception("Memory allocation failed");
+        RETURN_THROWS();
+    }
+
+    uintptr_t written = biscuit_serialize(intern->token, buffer);
 
     if (!written) {
+        efree(buffer);
         throw_biscuit_exception("Failed to serialize token");
         RETURN_THROWS();
     }
 
-    RETURN_STRINGL((char *)buffer, written);
+    RETVAL_STRINGL((char *)buffer, written);
+    efree(buffer);
 }
 
+/* ========================= BiscuitAuthorizerBuilder methods ========================= */
 PHP_METHOD(BiscuitAuthorizerBuilder, __construct) {
     ZEND_PARSE_PARAMETERS_NONE();
 
@@ -250,9 +312,10 @@ PHP_METHOD(BiscuitAuthorizerBuilder, addFact) {
     bool result = authorizer_builder_add_fact(intern->authorizer_builder, fact);
     if (result) {
         RETURN_ZVAL(getThis(), 1, 0);
-    } else {
-        RETURN_BOOL(false);
     }
+
+    throw_biscuit_exception("Failed to add fact");
+    RETURN_THROWS();
 }
 
 PHP_METHOD(BiscuitAuthorizerBuilder, addRule) {
@@ -268,9 +331,10 @@ PHP_METHOD(BiscuitAuthorizerBuilder, addRule) {
     bool result = authorizer_builder_add_rule(intern->authorizer_builder, rule);
     if (result) {
         RETURN_ZVAL(getThis(), 1, 0);
-    } else {
-        RETURN_BOOL(false);
     }
+
+    throw_biscuit_exception("Failed to add rule");
+    RETURN_THROWS();
 }
 
 PHP_METHOD(BiscuitAuthorizerBuilder, addCheck) {
@@ -286,9 +350,10 @@ PHP_METHOD(BiscuitAuthorizerBuilder, addCheck) {
     bool result = authorizer_builder_add_check(intern->authorizer_builder, check);
     if (result) {
         RETURN_ZVAL(getThis(), 1, 0);
-    } else {
-        RETURN_BOOL(false);
     }
+
+    throw_biscuit_exception("Failed to add check");
+    RETURN_THROWS();
 }
 
 PHP_METHOD(BiscuitAuthorizerBuilder, addPolicy) {
@@ -304,9 +369,10 @@ PHP_METHOD(BiscuitAuthorizerBuilder, addPolicy) {
     bool result = authorizer_builder_add_policy(intern->authorizer_builder, policy);
     if (result) {
         RETURN_ZVAL(getThis(), 1, 0);
-    } else {
-        RETURN_BOOL(false);
     }
+
+    throw_biscuit_exception("Failed to add policy");
+    RETURN_THROWS();
 }
 
 PHP_METHOD(BiscuitAuthorizerBuilder, build) {
@@ -344,6 +410,7 @@ PHP_METHOD(BiscuitAuthorizerBuilder, buildUnauthenticated) {
     }
 }
 
+/* ========================= BiscuitAuthorizer methods ========================= */
 PHP_METHOD(BiscuitAuthorizer, authorize) {
     ZEND_PARSE_PARAMETERS_NONE();
 

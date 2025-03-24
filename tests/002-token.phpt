@@ -9,20 +9,21 @@ if (!extension_loaded('biscuit')) {
 --FILE--
 <?php
 // Create a key pair for signing
-$keypair = new BiscuitKeyPair();
+$seed = random_bytes(32);
+$keypair = new BiscuitKeyPair($seed);
 
 // Create a token builder
 $builder = new BiscuitBuilder();
 var_dump($builder instanceof BiscuitBuilder);
 
 // Add some facts and rules
-var_dump($builder->setContext("test context"));
-var_dump($builder->addFact("right(\"file1\", \"read\")"));
-var_dump($builder->addRule("allow(\"read\") <- right(\"file1\", \"read\")"));
-var_dump($builder->addCheck("check if right(\"file1\", \"read\")"));
+$builder->setContext("test context")
+    ->addFact("right(\"file1\", \"read\")")
+    ->addRule("allow(\"read\") <- right(\"file1\", \"read\")")
+    ->addCheck("check if right(\"file1\", \"read\")");
 
 // Build the token
-$token = $builder->build($keypair);
+$token = $builder->build($keypair, $seed);
 var_dump($token instanceof BiscuitToken);
 
 // Test token serialization
@@ -45,8 +46,8 @@ $block = new BiscuitBlockBuilder();
 var_dump($block instanceof BiscuitBlockBuilder);
 
 // Add facts to the block
-var_dump($block->setContext("block2 context"));
-var_dump($block->addFact("right(\"file2\", \"write\")"));
+$block->setContext("block2 context")
+    ->addFact("right(\"file2\", \"write\")");
 
 // Append the block to the token
 $newToken = $token->appendBlock($block, $keypair);
@@ -59,16 +60,9 @@ bool(true)
 bool(true)
 bool(true)
 bool(true)
+bool(false)
 bool(true)
 bool(true)
 bool(true)
 bool(true)
 bool(true)
-bool(true)
-bool(true)
-bool(true)
-bool(true)
-bool(true)
-bool(true)
-bool(true)
-bool(true) 

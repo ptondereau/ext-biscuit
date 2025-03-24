@@ -75,4 +75,4 @@ jobs:
       - name: make
         run: make
       - name: test
-        run: env NO_INTERACTION=1 make test || exit 0
+        run: env NO_INTERACTION=1 make test
