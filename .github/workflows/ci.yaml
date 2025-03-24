@@ -2,13 +2,14 @@ name: Build and Test
 on: [push, pull_request]
 jobs:
   php-build:
-    name: PHP ${{ matrix.php-versions }} on ${{ matrix.os }} (${{ matrix.arch }}) with Biscuit ${{ matrix.biscuit-versions }}
+    name: PHP ${{ matrix.php-versions }} on ${{ matrix.os }} (${{ matrix.arch }}) ${{ matrix.phpts }} with Biscuit ${{ matrix.biscuit-versions }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
         php-versions: ["8.1", "8.2", "8.3", "8.4"]
+        phpts: ["ts", "nts"]
         biscuit-versions: ["6.0.0-beta.2"]
         include:
           - os: ubuntu-latest
@@ -68,6 +69,7 @@ jobs:
           coverage: none
         env:
           debug: true
+          phpts: ${{ matrix.phpts }}
       - name: phpize
         run: phpize
       - name: configure
