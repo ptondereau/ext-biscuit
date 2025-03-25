@@ -2,6 +2,8 @@ dnl config.m4 for extension biscuit
 
 PHP_ARG_WITH(biscuit, for biscuit support,
   [  --with-biscuit           Include biscuit support])
+PHP_ARG_ENABLE(biscuit-static, whether to build biscuit statically,
+  [  --enable-biscuit-static  Build biscuit extension statically], no, no)
 
 if test "$PHP_BISCUIT" != "no"; then
   SEARCH_PATH="/usr/local /usr"
@@ -26,18 +28,29 @@ if test "$PHP_BISCUIT" != "no"; then
 
   PHP_ADD_INCLUDE($BISCUIT_DIR/include)
   SOURCES="biscuit.c biscuit_methods.c"
-  LIBNAME=biscuit_auth
-  LIBSYMBOL=biscuit_authorizer
 
-  PHP_CHECK_LIBRARY($LIBNAME,$LIBSYMBOL,
-  [
-    PHP_ADD_LIBRARY_WITH_PATH($LIBNAME, $BISCUIT_DIR/$PHP_LIBDIR, BISCUIT_SHARED_LIBADD)
-    AC_DEFINE(HAVE_BISCUITLIB,1,[ ])
-  ],[
-    AC_MSG_ERROR([wrong biscuit lib version or lib not found])
-  ],[
-    -L$BISCUIT_DIR/$PHP_LIBDIR -lm
-  ])
+  dnl Handle static linking if requested
+  if test "$PHP_BISCUIT_STATIC" = "yes"; then
+    if test -r "$BISCUIT_DIR/$PHP_LIBDIR/libbiscuit_auth.a"; then
+      BISCUIT_SHARED_LIBADD="$BISCUIT_DIR/$PHP_LIBDIR/libbiscuit_auth.a"
+      AC_DEFINE(HAVE_BISCUITLIB,1,[ ])
+    else
+      AC_MSG_ERROR([Static library requested but libbiscuit_auth.a not found])
+    fi
+  else
+    LIBNAME=biscuit_auth
+    LIBSYMBOL=biscuit_authorizer
+
+    PHP_CHECK_LIBRARY($LIBNAME,$LIBSYMBOL,
+    [
+      PHP_ADD_LIBRARY_WITH_PATH($LIBNAME, $BISCUIT_DIR/$PHP_LIBDIR, BISCUIT_SHARED_LIBADD)
+      AC_DEFINE(HAVE_BISCUITLIB,1,[ ])
+    ],[
+      AC_MSG_ERROR([wrong biscuit lib version or lib not found])
+    ],[
+      -L$BISCUIT_DIR/$PHP_LIBDIR -lm
+    ])
+  fi
 
   ORIG_LDFLAGS="$LDFLAGS"
   ORIG_CPPFLAGS="$CPPFLAGS"

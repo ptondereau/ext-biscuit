@@ -55,7 +55,7 @@ jobs:
         run: phpize
 
       - name: configure
-        run: ./configure --with-biscuit
+        run: ./configure --with-biscuit --enable-biscuit-static
 
       - name: make
         run: make

@@ -43,15 +43,12 @@ jobs:
       - name: Install Biscuit library (macOS)
         if: matrix.os == 'macos-latest'
         run: |
-          brew tap hackerchai/tap
-          brew install dylib-installer
           sudo mkdir -p /usr/local/lib
           sudo mkdir -p /usr/local/include
           sudo chmod 755 /usr/local/lib
           sudo chmod 755 /usr/local/include
           sudo cp -r biscuit-lib/usr/lib/* /usr/local/lib/
           sudo cp -r biscuit-lib/usr/include/* /usr/local/include/
-          sudo dylib_installer /usr/local/lib/ /usr/local/include/ -n biscuit_auth
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,7 +65,7 @@ jobs:
       - name: phpize
         run: phpize
       - name: configure
-        run: ./configure --with-biscuit
+        run: ./configure --with-biscuit --enable-biscuit-static
       - name: make
         run: make
       - name: test
