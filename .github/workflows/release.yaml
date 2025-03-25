@@ -9,13 +9,12 @@ permissions:
 
 jobs:
   php-release-build:
-    name: PHP ${{ matrix.php-versions }} ${{ matrix.zts }} on Linux (x86_64)
+    name: PHP ${{ matrix.php-versions }} on Linux (x86_64)
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php-versions: ["8.1", "8.2", "8.3", "8.4"]
-        zts: ["ts", "nts"]
         biscuit-versions: ["6.0.0-beta.2"]
     
     steps:
@@ -48,8 +47,6 @@ jobs:
           php-version: ${{ matrix.php-versions }}
           ini-values: error_reporting=-1, display_errors=On
           coverage: none
-        env:
-          phpts: ${{ matrix.zts }}
 
       - name: phpize
         run: phpize
