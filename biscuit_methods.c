@@ -65,7 +65,7 @@ PHP_METHOD(BiscuitKeyPair, serialize) {
     uint8_t buffer[BISCUIT_KEY_SIZE];
     uintptr_t written = key_pair_serialize(intern->keypair, buffer);
 
-    RETURN_STRINGL(buffer, written);
+    RETURN_STRINGL((char *)buffer, written);
 }
 
 PHP_METHOD(BiscuitKeyPair, deserialize) {
@@ -101,7 +101,7 @@ PHP_METHOD(BiscuitPublicKey, serialize) {
     uint8_t buffer[BISCUIT_KEY_SIZE];
     uintptr_t written = public_key_serialize(intern->publickey, buffer);
 
-    RETURN_STRINGL(buffer, written);
+    RETURN_STRINGL((char *)buffer, written);
 }
 
 PHP_METHOD(BiscuitPublicKey, deserialize) {
