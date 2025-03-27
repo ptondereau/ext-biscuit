@@ -52,7 +52,7 @@ jobs:
         run: phpize
 
       - name: configure
-        run: ./configure --with-biscuit --enable-biscuit-static
+        run: ./configure --with-biscuit
 
       - name: make
         run: make
@@ -63,12 +63,12 @@ jobs:
       - name: Prepare extension artifact
         run: |
           mkdir -p dist
-          cp modules/biscuit.so dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.zts }}.so
-          cd dist && sha256sum biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.zts }}.so > biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.zts }}.so.sha256
+          cp modules/biscuit.so dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}.so
+          cd dist && sha256sum biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}.so > biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}.so.sha256
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.zts }}.so
-            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.zts }}.so.sha256
+            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}.so
+            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}.so.sha256
