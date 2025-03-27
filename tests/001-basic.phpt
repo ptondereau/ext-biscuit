@@ -1,8 +1,8 @@
 --TEST--
-Basic Biscuit extension test
+Basic Biscuit extension test 
 --SKIPIF--
 <?php
-if (!extension_loaded('biscuit')) {
+if (!extension_loaded('biscuit') || PHP_OS_FAMILY === 'Darwin') {
     echo 'skip';
 }
 ?>

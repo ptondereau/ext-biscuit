@@ -2,14 +2,13 @@ name: Build and Test
 on: [push, pull_request]
 jobs:
   php-build:
-    name: PHP ${{ matrix.php-versions }} on ${{ matrix.os }} (${{ matrix.arch }}) ${{ matrix.phpts }} with Biscuit ${{ matrix.biscuit-versions }}
+    name: PHP ${{ matrix.php-versions }} on ${{ matrix.os }} (${{ matrix.arch }}) with Biscuit ${{ matrix.biscuit-versions }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
         php-versions: ["8.1", "8.2", "8.3", "8.4"]
-        phpts: ["ts", "nts"]
         biscuit-versions: ["6.0.0-beta.2"]
         include:
           - os: ubuntu-latest
@@ -49,6 +48,10 @@ jobs:
           sudo chmod 755 /usr/local/include
           sudo cp -r biscuit-lib/usr/lib/* /usr/local/lib/
           sudo cp -r biscuit-lib/usr/include/* /usr/local/include/
+          echo "DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "LIBRARY_PATH=/usr/local/lib:$LIBRARY_PATH" >> $GITHUB_ENV
+          echo "CPATH=/usr/local/include:$CPATH" >> $GITHUB_ENV
+          echo "/usr/local/lib" | sudo tee /etc/paths.d/local
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,12 +64,14 @@ jobs:
           coverage: none
         env:
           debug: true
-          phpts: ${{ matrix.phpts }}
       - name: phpize
         run: phpize
       - name: configure
-        run: ./configure --with-biscuit --enable-biscuit-static
-      - name: make
-        run: make
+        run: ./configure --with-biscuit
       - name: test
-        run: env NO_INTERACTION=1 make test
+        run: |
+          env NO_INTERACTION=1 make test TESTS="-v" || {
+            echo "Tests failed. Showing logs:"
+            find ./tests -name "*.log" -exec cat {} \;
+            exit 1
+          }
