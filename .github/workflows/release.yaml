@@ -93,5 +93,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.os }}.so
-            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.os }}.so.sha256
+          if [ ${{ matrix.os }} == 'ubuntu-latest' ]; then
+            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-x86_64-linux.so
+            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-x86_64-linux.so.sha256
+          elif [ ${{ matrix.os }} == 'macos-latest' ]; then
+            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-arm64-macos.so
+            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-arm64-macos.so.sha256
+          fi
