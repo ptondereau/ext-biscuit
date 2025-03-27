@@ -9,19 +9,23 @@ permissions:
 
 jobs:
   php-release-build:
-    name: PHP ${{ matrix.php-versions }} on Linux (x86_64)
-    runs-on: ubuntu-latest
+    name: PHP ${{ matrix.php-versions }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         php-versions: ["8.1", "8.2", "8.3", "8.4"]
         biscuit-versions: ["6.0.0-beta.2"]
-    
+        os: ["ubuntu-latest", "macos-latest"]
     steps:
       - name: Set asset name for Biscuit library
         id: set-asset-name
         run: |
-          echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-versions }}-x86_64-linux.tar.gz" >> $GITHUB_ENV
+          if [ ${{ matrix.os }} == 'ubuntu-latest' ]; then
+            echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-versions }}-x86_64-linux.tar.gz" >> $GITHUB_ENV
+          elif [ ${{ matrix.os }} == 'macos-latest' ]; then
+            echo "ASSET_NAME=biscuit-auth-${{ matrix.biscuit-versions }}-arm64-macos.tar.gz" >> $GITHUB_ENV
+          fi
 
       - name: Download Biscuit library
         run: |
@@ -33,10 +37,25 @@ jobs:
           tar -xzf biscuit.tar.gz -C biscuit-lib
 
       - name: Install Biscuit library
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           sudo cp -r biscuit-lib/usr/lib/* /usr/lib/
           sudo cp -r biscuit-lib/usr/include/* /usr/include/
           sudo ldconfig
+
+      - name: Install Biscuit library
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          sudo mkdir -p /usr/local/lib
+          sudo mkdir -p /usr/local/include
+          sudo chmod 755 /usr/local/lib
+          sudo chmod 755 /usr/local/include
+          sudo cp -r biscuit-lib/usr/lib/* /usr/local/lib/
+          sudo cp -r biscuit-lib/usr/include/* /usr/local/include/
+          echo "DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "LIBRARY_PATH=/usr/local/lib:$LIBRARY_PATH" >> $GITHUB_ENV
+          echo "CPATH=/usr/local/include:$CPATH" >> $GITHUB_ENV
+          echo "/usr/local/lib" | sudo tee /etc/paths.d/local
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -63,12 +82,16 @@ jobs:
       - name: Prepare extension artifact
         run: |
           mkdir -p dist
-          cp modules/biscuit.so dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}.so
-          cd dist && sha256sum biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}.so > biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}.so.sha256
-
+          if [ ${{ matrix.os }} == 'ubuntu-latest' ]; then
+            cp modules/biscuit.so dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-x86_64-linux.so
+            cd dist && sha256sum biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-x86_64-linux.so > biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-x86_64-linux.so.sha256
+          elif [ ${{ matrix.os }} == 'macos-latest' ]; then
+            cp modules/biscuit.so dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-arm64-macos.so
+            cd dist && sha256sum biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-arm64-macos.so > biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-arm64-macos.so.sha256
+          fi
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}.so
-            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}.so.sha256
+            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.os }}.so
+            dist/biscuit-${{ github.ref_name }}-php${{ matrix.php-versions }}-${{ matrix.os }}.so.sha256
